@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Bot, MessageSquare, GitBranch,
   Scale, Zap, Settings, ChevronLeft, ChevronRight,
-  MessageCircle, FileCode, Menu, X,
+  MessageCircle, FileCode, Menu, X, Globe,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -84,11 +84,18 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Collapse Toggle — سطح المكتب فقط */}
-      <div className="p-2 border-t border-sidebar-border shrink-0 hidden md:block">
+      {/* Language Toggle + Collapse */}
+      <div className="p-2 border-t border-sidebar-border shrink-0 space-y-1">
+        <button
+          onClick={() => useI18nStore.getState().toggleLocale()}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground transition-colors"
+        >
+          <Globe className="w-4 h-4 shrink-0" />
+          {!collapsed && <span className="text-xs">{t('app.language')}</span>}
+        </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-sidebar-accent transition-colors"
+          className="w-full items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-sidebar-accent transition-colors hidden md:flex"
         >
           {collapsed
             ? <ChevronLeft className="w-4 h-4" />
