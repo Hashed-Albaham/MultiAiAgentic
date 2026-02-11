@@ -1,4 +1,5 @@
 import { PageHeader } from '@/components/PageHeader';
+import { useI18nStore } from '@/store/i18nStore';
 import { motion } from 'framer-motion';
 import { Code, Send, Bot, GitBranch, Scale, MessageCircle, Key, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +9,8 @@ import { Link } from 'react-router-dom';
 interface EndpointDoc {
   method: 'POST' | 'GET' | 'DELETE';
   path: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descKey: string;
   icon: React.ElementType;
   color: string;
   headers: { key: string; value: string; required?: boolean }[];
@@ -19,177 +20,179 @@ interface EndpointDoc {
 
 const BASE_URL = 'https://your-domain.com/api/v1';
 
-const endpoints: EndpointDoc[] = [
-  {
-    method: 'POST',
-    path: '/chat',
-    title: 'إرسال رسالة محادثة',
-    description: 'أرسل رسالة لوكيل محدد واحصل على رد AI.',
-    icon: Send,
-    color: 'text-primary',
-    headers: [
-      { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
-      { key: 'Content-Type', value: 'application/json', required: true },
-    ],
-    body: JSON.stringify({
-      agentId: 'agent-uuid',
-      message: 'ما هو الذكاء الاصطناعي؟',
-      apiKey: 'sk-your-provider-api-key',
-      conversationId: 'optional-conv-id',
-    }, null, 2),
-    response: JSON.stringify({
-      success: true,
-      data: {
-        id: 'msg-uuid',
-        role: 'assistant',
-        content: 'الذكاء الاصطناعي هو...',
-        tokens: { prompt: 45, completion: 120, total: 165 },
-        duration: 1.2,
-      },
-    }, null, 2),
-  },
-  {
-    method: 'POST',
-    path: '/compare',
-    title: 'مقارنة وكلاء',
-    description: 'أرسل نفس الطلب لعدة وكلاء وقارن النتائج.',
-    icon: Scale,
-    color: 'text-accent',
-    headers: [
-      { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
-      { key: 'Content-Type', value: 'application/json', required: true },
-    ],
-    body: JSON.stringify({
-      agentIds: ['agent-1', 'agent-2', 'agent-3'],
-      prompt: 'اشرح مفهوم الخوارزميات',
-      apiKeys: {
-        googleai: 'AIzaSy...',
-        openai: 'sk-...',
-      },
-    }, null, 2),
-    response: JSON.stringify({
-      success: true,
-      data: {
-        results: [
-          { agentId: 'agent-1', response: '...', duration: 0.8, tokens: 200 },
-          { agentId: 'agent-2', response: '...', duration: 1.2, tokens: 300 },
-        ],
-      },
-    }, null, 2),
-  },
-  {
-    method: 'POST',
-    path: '/pipeline/execute',
-    title: 'تنفيذ Pipeline',
-    description: 'شغّل pipeline محدد بإدخال أولي.',
-    icon: GitBranch,
-    color: 'text-chart-3',
-    headers: [
-      { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
-      { key: 'Content-Type', value: 'application/json', required: true },
-    ],
-    body: JSON.stringify({
-      pipelineId: 'pipeline-uuid',
-      input: 'حلل هذا النص...',
-      apiKeys: {
-        googleai: 'AIzaSy...',
-        openai: 'sk-...',
-      },
-    }, null, 2),
-    response: JSON.stringify({
-      success: true,
-      data: {
-        executionId: 'exec-uuid',
-        status: 'completed',
-        result: 'النتيجة النهائية...',
-        trace: [
-          { nodeId: 'n1', agentName: 'المحلل', duration: 1.5, tokens: 250 },
-          { nodeId: 'n2', agentName: 'الملخص', duration: 0.9, tokens: 150 },
-        ],
-      },
-    }, null, 2),
-  },
-  {
-    method: 'GET',
-    path: '/agents',
-    title: 'قائمة الوكلاء',
-    description: 'احصل على قائمة جميع الوكلاء المسجلين.',
-    icon: Bot,
-    color: 'text-chart-4',
-    headers: [
-      { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
-    ],
-    response: JSON.stringify({
-      success: true,
-      data: {
-        agents: [
-          { id: 'agent-1', name: 'المساعد', provider: 'googleai', model: 'gemini-2.5-flash' },
-        ],
-      },
-    }, null, 2),
-  },
-  {
-    method: 'POST',
-    path: '/dialogue',
-    title: 'بدء حوار آلي',
-    description: 'شغّل حوار آلي بين وكيلين مع عدد جولات محدد.',
-    icon: MessageCircle,
-    color: 'text-primary',
-    headers: [
-      { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
-      { key: 'Content-Type', value: 'application/json', required: true },
-    ],
-    body: JSON.stringify({
-      agent1Id: 'agent-1',
-      agent2Id: 'agent-2',
-      initialMessage: 'ما رأيك في مستقبل AI؟',
-      maxTurns: 5,
-      apiKeys: {
-        googleai: 'AIzaSy...',
-      },
-    }, null, 2),
-    response: JSON.stringify({
-      success: true,
-      data: {
-        dialogueId: 'dlg-uuid',
-        messages: [
-          { agent: 'الوكيل ١', content: '...' },
-          { agent: 'الوكيل ٢', content: '...' },
-        ],
-        totalTurns: 5,
-      },
-    }, null, 2),
-  },
-];
-
-const copyCode = (code: string) => {
-  navigator.clipboard.writeText(code);
-  toast.success('تم نسخ الكود');
-};
-
 export default function ApiDocsPage() {
+  const { t } = useI18nStore();
+
+  const endpoints: EndpointDoc[] = [
+    {
+      method: 'POST',
+      path: '/chat',
+      titleKey: 'chat.send',
+      descKey: 'chat.subtitle',
+      icon: Send,
+      color: 'text-primary',
+      headers: [
+        { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
+        { key: 'Content-Type', value: 'application/json', required: true },
+      ],
+      body: JSON.stringify({
+        agentId: 'agent-uuid',
+        message: 'What is AI?',
+        apiKey: 'sk-your-provider-api-key',
+        conversationId: 'optional-conv-id',
+      }, null, 2),
+      response: JSON.stringify({
+        success: true,
+        data: {
+          id: 'msg-uuid',
+          role: 'assistant',
+          content: 'AI is...',
+          tokens: { prompt: 45, completion: 120, total: 165 },
+          duration: 1.2,
+        },
+      }, null, 2),
+    },
+    {
+      method: 'POST',
+      path: '/compare',
+      titleKey: 'compare.title',
+      descKey: 'compare.subtitle',
+      icon: Scale,
+      color: 'text-accent',
+      headers: [
+        { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
+        { key: 'Content-Type', value: 'application/json', required: true },
+      ],
+      body: JSON.stringify({
+        agentIds: ['agent-1', 'agent-2', 'agent-3'],
+        prompt: 'Explain algorithms',
+        apiKeys: {
+          googleai: 'AIzaSy...',
+          openai: 'sk-...',
+        },
+      }, null, 2),
+      response: JSON.stringify({
+        success: true,
+        data: {
+          results: [
+            { agentId: 'agent-1', response: '...', duration: 0.8, tokens: 200 },
+            { agentId: 'agent-2', response: '...', duration: 1.2, tokens: 300 },
+          ],
+        },
+      }, null, 2),
+    },
+    {
+      method: 'POST',
+      path: '/pipeline/execute',
+      titleKey: 'pipeline.title',
+      descKey: 'pipeline.subtitle',
+      icon: GitBranch,
+      color: 'text-chart-3',
+      headers: [
+        { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
+        { key: 'Content-Type', value: 'application/json', required: true },
+      ],
+      body: JSON.stringify({
+        pipelineId: 'pipeline-uuid',
+        input: 'Analyze this text...',
+        apiKeys: {
+          googleai: 'AIzaSy...',
+          openai: 'sk-...',
+        },
+      }, null, 2),
+      response: JSON.stringify({
+        success: true,
+        data: {
+          executionId: 'exec-uuid',
+          status: 'completed',
+          result: 'Final result...',
+          trace: [
+            { nodeId: 'n1', agentName: 'Analyzer', duration: 1.5, tokens: 250 },
+            { nodeId: 'n2', agentName: 'Summarizer', duration: 0.9, tokens: 150 },
+          ],
+        },
+      }, null, 2),
+    },
+    {
+      method: 'GET',
+      path: '/agents',
+      titleKey: 'agents.title',
+      descKey: 'agents.subtitle',
+      icon: Bot,
+      color: 'text-chart-4',
+      headers: [
+        { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
+      ],
+      response: JSON.stringify({
+        success: true,
+        data: {
+          agents: [
+            { id: 'agent-1', name: 'Assistant', provider: 'googleai', model: 'gemini-2.5-flash' },
+          ],
+        },
+      }, null, 2),
+    },
+    {
+      method: 'POST',
+      path: '/dialogue',
+      titleKey: 'dialogue.title',
+      descKey: 'dialogue.subtitle',
+      icon: MessageCircle,
+      color: 'text-primary',
+      headers: [
+        { key: 'Authorization', value: 'Bearer wkp_xxxxx', required: true },
+        { key: 'Content-Type', value: 'application/json', required: true },
+      ],
+      body: JSON.stringify({
+        agent1Id: 'agent-1',
+        agent2Id: 'agent-2',
+        initialMessage: 'What do you think about the future of AI?',
+        maxTurns: 5,
+        apiKeys: {
+          googleai: 'AIzaSy...',
+        },
+      }, null, 2),
+      response: JSON.stringify({
+        success: true,
+        data: {
+          dialogueId: 'dlg-uuid',
+          messages: [
+            { agent: 'Agent 1', content: '...' },
+            { agent: 'Agent 2', content: '...' },
+          ],
+          totalTurns: 5,
+        },
+      }, null, 2),
+    },
+  ];
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success(t('apiDocs.copied'));
+  };
+
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
       <PageHeader
-        title="توثيق API"
-        description="دليل شامل لاستخدام واجهة برمجة التطبيقات"
+        title={t('apiDocs.title')}
+        description={t('apiDocs.subtitle')}
         actions={
           <Link to="/settings">
             <Button variant="outline" className="gap-1.5">
-              <Key className="w-4 h-4" /> إنشاء توكن
+              <Key className="w-4 h-4" /> {t('apiDocs.createToken')}
             </Button>
           </Link>
         }
       />
 
-      {/* مقدمة */}
+      {/* Quick Start */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6">
-        <h2 className="text-lg font-bold text-foreground mb-3">🚀 البدء السريع</h2>
+        <h2 className="text-lg font-bold text-foreground mb-3">{t('apiDocs.quickStart')}</h2>
         <div className="space-y-3 text-sm text-muted-foreground">
-          <p>استخدم API وكيل بلس للتفاعل مع الوكلاء الذكية برمجياً. كل طلب يتطلب:</p>
+          <p>{t('apiDocs.quickStartDesc')}</p>
           <ol className="list-decimal list-inside space-y-1.5 mr-4">
-            <li><strong className="text-foreground">توكن API</strong> — أنشئه من <Link to="/settings" className="text-primary underline">الإعدادات → توكنات API</Link></li>
-            <li><strong className="text-foreground">مفتاح المزود</strong> — أرسل <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">apiKey</code> أو <code className="bg-secondary px-1.5 py-0.5 rounded text-xs">apiKeys</code> في body كل طلب</li>
+            <li><strong className="text-foreground">API Token</strong> — {t('apiDocs.tokenReq')}</li>
+            <li><strong className="text-foreground">Provider Key</strong> — {t('apiDocs.providerKey')}</li>
           </ol>
         </div>
 
@@ -205,24 +208,23 @@ export default function ApiDocsPage() {
 
         <div className="mt-4 p-3 rounded-lg bg-chart-4/5 border border-chart-4/20">
           <p className="text-xs text-chart-4">
-            ⚠️ <strong>مهم:</strong> عند استخدام API، يجب إرسال مفتاح API الخاص بمزود AI (مثل OpenAI أو Gemini) مع كل طلب.
-            أما من واجهة الموقع، فتُستخدم المفاتيح المحفوظة في الإعدادات تلقائياً.
+            ⚠️ <strong>{t('apiDocs.important')}</strong> {t('apiDocs.importantDesc')}
           </p>
         </div>
       </motion.div>
 
-      {/* المصادقة */}
+      {/* Authentication */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card p-6 mb-6">
-        <h2 className="text-lg font-bold text-foreground mb-3">🔐 المصادقة</h2>
-        <p className="text-sm text-muted-foreground mb-3">أضف التوكن في header كل طلب:</p>
+        <h2 className="text-lg font-bold text-foreground mb-3">{t('apiDocs.auth')}</h2>
+        <p className="text-sm text-muted-foreground mb-3">{t('apiDocs.authDesc')}</p>
         <CodeBlock code={`curl -X POST ${BASE_URL}/chat \\
   -H "Authorization: Bearer wkp_xxxxx" \\
   -H "Content-Type: application/json" \\
   -d '{
     "agentId": "agent-uuid",
-    "message": "مرحباً",
+    "message": "Hello",
     "apiKey": "sk-your-openai-key"
-  }'`} />
+  }'`} onCopy={copyCode} />
       </motion.div>
 
       {/* Endpoints */}
@@ -241,14 +243,13 @@ export default function ApiDocsPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                    ep.method === 'POST' ? 'bg-primary/15 text-primary' :
-                    ep.method === 'GET' ? 'bg-chart-3/15 text-chart-3' :
-                    'bg-destructive/15 text-destructive'
-                  }`}>{ep.method}</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${ep.method === 'POST' ? 'bg-primary/15 text-primary' :
+                      ep.method === 'GET' ? 'bg-chart-3/15 text-chart-3' :
+                        'bg-destructive/15 text-destructive'
+                    }`}>{ep.method}</span>
                   <code className="text-sm font-mono text-foreground">{ep.path}</code>
                 </div>
-                <p className="text-xs text-muted-foreground">{ep.description}</p>
+                <p className="text-xs text-muted-foreground">{t(ep.descKey)}</p>
               </div>
             </div>
 
@@ -266,32 +267,32 @@ export default function ApiDocsPage() {
             {ep.body && (
               <>
                 <h4 className="text-xs font-semibold text-foreground mb-2">Request Body</h4>
-                <CodeBlock code={ep.body} className="mb-4" />
+                <CodeBlock code={ep.body} className="mb-4" onCopy={copyCode} />
               </>
             )}
 
             {ep.response && (
               <>
                 <h4 className="text-xs font-semibold text-foreground mb-2">Response</h4>
-                <CodeBlock code={ep.response} />
+                <CodeBlock code={ep.response} onCopy={copyCode} />
               </>
             )}
           </motion.div>
         ))}
       </div>
 
-      {/* أكواد الخطأ */}
+      {/* Response Codes */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-6 mt-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">⚡ أكواد الاستجابة</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">{t('apiDocs.responseCodes')}</h2>
         <div className="space-y-2">
           {[
-            { code: 200, desc: 'نجاح — العملية تمت بنجاح', color: 'text-primary' },
-            { code: 400, desc: 'طلب غير صالح — تحقق من البيانات المرسلة', color: 'text-chart-4' },
-            { code: 401, desc: 'غير مصرح — التوكن غير صالح أو مفقود', color: 'text-destructive' },
-            { code: 403, desc: 'محظور — التوكن لا يملك الصلاحية المطلوبة', color: 'text-destructive' },
-            { code: 404, desc: 'غير موجود — الوكيل أو Pipeline غير موجود', color: 'text-chart-4' },
-            { code: 429, desc: 'كثرة الطلبات — تجاوزت الحد المسموح', color: 'text-accent' },
-            { code: 500, desc: 'خطأ خادم — حدث خطأ داخلي', color: 'text-destructive' },
+            { code: 200, desc: 'Success', color: 'text-primary' },
+            { code: 400, desc: 'Bad Request', color: 'text-chart-4' },
+            { code: 401, desc: 'Unauthorized', color: 'text-destructive' },
+            { code: 403, desc: 'Forbidden', color: 'text-destructive' },
+            { code: 404, desc: 'Not Found', color: 'text-chart-4' },
+            { code: 429, desc: 'Rate Limited', color: 'text-accent' },
+            { code: 500, desc: 'Server Error', color: 'text-destructive' },
           ].map(item => (
             <div key={item.code} className="flex items-center gap-3 py-2 border-b border-border/30 last:border-0">
               <span className={`font-mono font-bold text-sm ${item.color}`}>{item.code}</span>
@@ -301,10 +302,10 @@ export default function ApiDocsPage() {
         </div>
       </motion.div>
 
-      {/* SDK مثال */}
+      {/* JS Example */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="glass-card p-6 mt-6">
-        <h2 className="text-lg font-bold text-foreground mb-3">📦 مثال JavaScript/TypeScript</h2>
-        <CodeBlock code={`const WAKIL_API = '${BASE_URL}';
+        <h2 className="text-lg font-bold text-foreground mb-3">📦 JavaScript/TypeScript</h2>
+        <CodeBlock onCopy={copyCode} code={`const WAKIL_API = '${BASE_URL}';
 const TOKEN = 'wkp_xxxxx';
 
 async function chat(agentId, message, apiKey) {
@@ -319,19 +320,19 @@ async function chat(agentId, message, apiKey) {
   return res.json();
 }
 
-// الاستخدام
+// Usage
 const result = await chat(
   'agent-uuid',
-  'ما هو التعلم العميق؟',
+  'What is deep learning?',
   'sk-your-openai-key'
 );
 console.log(result.data.content);`} />
       </motion.div>
 
-      {/* Python مثال */}
+      {/* Python Example */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="glass-card p-6 mt-6 mb-8">
-        <h2 className="text-lg font-bold text-foreground mb-3">🐍 مثال Python</h2>
-        <CodeBlock code={`import requests
+        <h2 className="text-lg font-bold text-foreground mb-3">🐍 Python</h2>
+        <CodeBlock onCopy={copyCode} code={`import requests
 
 WAKIL_API = '${BASE_URL}'
 TOKEN = 'wkp_xxxxx'
@@ -351,15 +352,15 @@ def chat(agent_id, message, api_key):
     )
     return res.json()
 
-# الاستخدام
-result = chat('agent-uuid', 'ما هو التعلم العميق؟', 'sk-your-openai-key')
+# Usage
+result = chat('agent-uuid', 'What is deep learning?', 'sk-your-openai-key')
 print(result['data']['content'])`} />
       </motion.div>
     </div>
   );
 }
 
-function CodeBlock({ code, className = '' }: { code: string; className?: string }) {
+function CodeBlock({ code, className = '', onCopy }: { code: string; className?: string; onCopy: (code: string) => void }) {
   return (
     <div className={`relative group ${className}`}>
       <pre className="bg-background border border-border rounded-xl p-4 overflow-x-auto text-xs font-mono text-foreground/80 leading-relaxed">
@@ -369,7 +370,7 @@ function CodeBlock({ code, className = '' }: { code: string; className?: string 
         size="icon"
         variant="ghost"
         className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
-        onClick={() => { navigator.clipboard.writeText(code); toast.success('تم نسخ الكود'); }}
+        onClick={() => onCopy(code)}
       >
         <Copy className="w-3.5 h-3.5" />
       </Button>

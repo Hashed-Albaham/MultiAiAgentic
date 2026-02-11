@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { useAgentStore } from '@/store/agentStore';
 import { useApiKeyStore } from '@/store/apiKeyStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,7 @@ interface DialogueMessage {
 export default function DialoguePage() {
   const { agents } = useAgentStore();
   const { getActualKey } = useApiKeyStore();
+  const { t } = useI18nStore();
   const [agent1Id, setAgent1Id] = useState(agents[0]?.id || '');
   const [agent2Id, setAgent2Id] = useState(agents[1]?.id || '');
   const [initialMessage, setInitialMessage] = useState('');
@@ -53,12 +55,12 @@ export default function DialoguePage() {
     conversationHistory: AIMessage[]
   ): Promise<string> => {
     const agent = agents.find((a) => a.id === agentId);
-    if (!agent) throw new Error('الوكيل غير موجود');
+    if (!agent) throw new Error('Agent not found');
 
     const apiKey = agent.apiKeyId ? getActualKey(agent.apiKeyId) : undefined;
 
     if (!apiKey) {
-      return `⚠️ لا يوجد مفتاح API لـ ${agent.name}. يرجى إضافة مفتاح من الإعدادات.`;
+      return `⚠️ ${t('form.noKeys')} (${agent.name})`;
     }
 
     try {
@@ -66,26 +68,26 @@ export default function DialoguePage() {
         agent.modelProvider,
         agent.modelId,
         apiKey,
-        agent.systemPrompt + '\n\nأنت في حوار مع وكيل آخر. أكمل الحوار بشكل طبيعي ومفيد.',
+        agent.systemPrompt + '\n\nYou are in a dialogue with another agent. Continue naturally.',
         conversationHistory
       );
       return result.content;
     } catch (err) {
-      return `❌ خطأ: ${err instanceof Error ? err.message : 'غير معروف'}`;
+      return `❌ Error: ${err instanceof Error ? err.message : 'Unknown'}`;
     }
   };
 
   const startDialogue = async () => {
     if (!agent1Id || !agent2Id) {
-      toast.error('اختر وكيلين');
+      toast.error(t('dialogue.selectTwo'));
       return;
     }
     if (agent1Id === agent2Id) {
-      toast.error('اختر وكيلين مختلفين');
+      toast.error(t('dialogue.selectDifferent'));
       return;
     }
     if (!initialMessage.trim()) {
-      toast.error('أدخل رسالة أولية');
+      toast.error(t('dialogue.enterInitial'));
       return;
     }
 
@@ -100,18 +102,16 @@ export default function DialoguePage() {
     const { agent: a2, provider: p2 } = getAgentInfo(agent2Id);
     if (!a1 || !a2) return;
 
-    // تتبع تاريخ المحادثة لكل وكيل
     const agent1History: AIMessage[] = [];
     const agent2History: AIMessage[] = [];
     let lastMessage = initialMessage;
 
-    // إضافة الرسالة الأولية
     const initMsg: DialogueMessage = {
       id: crypto.randomUUID(),
       agentId: 'system',
-      agentName: 'النظام',
+      agentName: t('dialogue.system'),
       agentIcon: '🎯',
-      content: `**الرسالة الأولية:** ${initialMessage}`,
+      content: `**${t('dialogue.initialMsgLabel')}** ${initialMessage}`,
       timestamp: new Date().toISOString(),
     };
     setMessages([initMsg]);
@@ -127,7 +127,7 @@ export default function DialoguePage() {
 
       setCurrentTurn(turn + 1);
 
-      // الوكيل الأول يتحدث
+      // Agent 1 speaks
       agent1History.push({ role: 'user', content: lastMessage });
       const response1 = await callAgent(agent1Id, agent1History);
       agent1History.push({ role: 'assistant', content: response1 });
@@ -150,7 +150,7 @@ export default function DialoguePage() {
       }
       if (abortRef.current) break;
 
-      // الوكيل الثاني يرد
+      // Agent 2 replies
       agent2History.push({ role: 'user', content: lastMessage });
       const response2 = await callAgent(agent2Id, agent2History);
       agent2History.push({ role: 'assistant', content: response2 });
@@ -168,7 +168,7 @@ export default function DialoguePage() {
     }
 
     setIsRunning(false);
-    if (!abortRef.current) toast.success('انتهى الحوار!');
+    if (!abortRef.current) toast.success(t('dialogue.done'));
   };
 
   const togglePause = () => {
@@ -191,19 +191,19 @@ export default function DialoguePage() {
     a.download = `dialogue-${Date.now()}.md`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('تم تصدير الحوار');
+    toast.success(t('dialogue.exported'));
   };
 
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
       <div className="p-3 md:p-4 lg:p-6 border-b border-border pt-14 md:pt-4 lg:pt-6">
-        <PageHeader title="الحوار الآلي" description="اختر وكيلين ودعهما يتحاوران تلقائياً" />
+        <PageHeader title={t('dialogue.title')} description={t('dialogue.subtitle')} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
           <Select value={agent1Id} onValueChange={setAgent1Id}>
             <SelectTrigger className="bg-card border-border">
-              <SelectValue placeholder="الوكيل الأول" />
+              <SelectValue placeholder={t('dialogue.agent1')} />
             </SelectTrigger>
             <SelectContent>
               {agents.map((a) => {
@@ -215,7 +215,7 @@ export default function DialoguePage() {
 
           <Select value={agent2Id} onValueChange={setAgent2Id}>
             <SelectTrigger className="bg-card border-border">
-              <SelectValue placeholder="الوكيل الثاني" />
+              <SelectValue placeholder={t('dialogue.agent2')} />
             </SelectTrigger>
             <SelectContent>
               {agents.map((a) => {
@@ -226,20 +226,20 @@ export default function DialoguePage() {
           </Select>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground shrink-0">الجولات: {maxTurns}</span>
+            <span className="text-xs text-muted-foreground shrink-0">{t('dialogue.rounds')}: {maxTurns}</span>
             <Slider value={[maxTurns]} onValueChange={(v) => setMaxTurns(v[0])} min={1} max={20} step={1} />
           </div>
 
           <div className="flex gap-2">
             {!isRunning ? (
               <Button onClick={startDialogue} className="gap-1.5 flex-1">
-                <Play className="w-4 h-4" /> بدء
+                <Play className="w-4 h-4" /> {t('dialogue.start')}
               </Button>
             ) : (
               <>
                 <Button variant="outline" onClick={togglePause} className="gap-1.5 flex-1">
                   {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-                  {isPaused ? 'استئناف' : 'إيقاف'}
+                  {isPaused ? t('dialogue.resume') : t('dialogue.pause')}
                 </Button>
                 <Button variant="destructive" onClick={stopDialogue} size="icon">
                   <RotateCcw className="w-4 h-4" />
@@ -257,14 +257,14 @@ export default function DialoguePage() {
         <Input
           value={initialMessage}
           onChange={(e) => setInitialMessage(e.target.value)}
-          placeholder="اكتب الرسالة الأولية التي ستبدأ الحوار..."
+          placeholder={t('dialogue.initialPlaceholder')}
           className="mt-3 bg-card border-border"
           disabled={isRunning}
         />
 
         {isRunning && (
           <div className="mt-2 text-xs text-chart-4">
-            ⚡ الجولة {currentTurn} من {maxTurns}
+            ⚡ {t('dialogue.round')} {currentTurn} {t('dialogue.roundOf')} {maxTurns}
           </div>
         )}
       </div>
@@ -277,8 +277,8 @@ export default function DialoguePage() {
               <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
                 <Bot className="w-8 h-8 text-accent" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">الحوار الآلي بين وكيلين</h3>
-              <p className="text-sm text-muted-foreground">اختر وكيلين، اكتب رسالة أولية، وشاهد الحوار يتدفق</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('dialogue.emptyTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('dialogue.emptyDesc')}</p>
             </div>
           )}
 

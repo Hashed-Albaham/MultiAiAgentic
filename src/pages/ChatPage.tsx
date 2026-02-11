@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAgentStore } from '@/store/agentStore';
 import { useApiKeyStore } from '@/store/apiKeyStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +23,7 @@ interface LocalMessage {
 export default function ChatPage() {
   const { agents } = useAgentStore();
   const { getActualKey } = useApiKeyStore();
+  const { t } = useI18nStore();
   const [searchParams] = useSearchParams();
   const [selectedAgentId, setSelectedAgentId] = useState(searchParams.get('agent') || agents[0]?.id || '');
   const [messages, setMessages] = useState<LocalMessage[]>([]);
@@ -50,7 +52,7 @@ export default function ChatPage() {
       const response: LocalMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `⚠️ **لا يوجد مفتاح API لهذا الوكيل.**\n\nاذهب إلى **الإعدادات → مفاتيح API** وأضف مفتاحاً لـ ${provider?.name || agent.modelProvider}، ثم عدّل هذا الوكيل واختر المفتاح.`,
+        content: `⚠️ **${t('chat.noKeyWarning')}**`,
       };
       setMessages((prev) => [...prev, response]);
       setIsLoading(false);
@@ -58,7 +60,6 @@ export default function ChatPage() {
     }
 
     try {
-      // بناء سياق المحادثة (آخر 20 رسالة)
       const contextMessages: AIMessage[] = messages.slice(-20).map((m) => ({
         role: m.role,
         content: m.content,
@@ -80,12 +81,12 @@ export default function ChatPage() {
       };
       setMessages((prev) => [...prev, response]);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'خطأ غير معروف';
-      toast.error('فشل الاتصال بـ AI');
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      toast.error(t('chat.connectionError'));
       const response: LocalMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `❌ **خطأ في الاتصال:**\n\n\`${errorMsg}\``,
+        content: `❌ **Error:**\n\n\`${errorMsg}\``,
       };
       setMessages((prev) => [...prev, response]);
     } finally {
@@ -107,7 +108,7 @@ export default function ChatPage() {
         <div className="flex items-center gap-2 md:gap-4 max-w-4xl flex-wrap">
           <Select value={selectedAgentId} onValueChange={(v) => { setSelectedAgentId(v); setMessages([]); }}>
             <SelectTrigger className="w-44 md:w-64 bg-card border-border text-xs md:text-sm h-8 md:h-9">
-              <SelectValue placeholder="اختر وكيلاً" />
+              <SelectValue placeholder={t('chat.selectAgent')} />
             </SelectTrigger>
             <SelectContent>
               {agents.map((a) => {
@@ -125,7 +126,7 @@ export default function ChatPage() {
               <span className="hidden sm:inline">{provider?.name} · {agent.modelId}</span>
               {!hasKey && (
                 <span className="flex items-center gap-1 text-[10px] text-chart-4 bg-chart-4/10 px-2 py-0.5 rounded-full">
-                  <AlertTriangle className="w-2.5 h-2.5" /> بدون مفتاح
+                  <AlertTriangle className="w-2.5 h-2.5" /> {t('chat.noKey')}
                 </span>
               )}
             </div>
@@ -142,12 +143,12 @@ export default function ChatPage() {
                 <Bot className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {agent ? `ابدأ محادثة مع ${agent.name}` : 'اختر وكيلاً للبدء'}
+                {agent ? `${t('chat.startWith')} ${agent.name}` : t('chat.noAgent')}
               </h3>
-              <p className="text-sm text-muted-foreground">اكتب رسالتك في الأسفل</p>
+              <p className="text-sm text-muted-foreground">{t('chat.typeBelow')}</p>
               {agent && !hasKey && (
                 <p className="text-xs text-chart-4 mt-2">
-                  ⚠️ هذا الوكيل لا يملك مفتاح API — اذهب للإعدادات وأضف مفتاحاً ثم عدّل الوكيل
+                  ⚠️ {t('chat.noKeyWarning')}
                 </p>
               )}
             </div>
@@ -205,7 +206,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="اكتب رسالتك..."
+            placeholder={t('chat.placeholder')}
             rows={1}
             className="bg-card border-border resize-none min-h-[44px] max-h-32"
           />

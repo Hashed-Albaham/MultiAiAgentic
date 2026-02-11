@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { useAgentStore } from '@/store/agentStore';
 import { useApiKeyStore } from '@/store/apiKeyStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,6 +27,7 @@ interface CompareResult {
 export default function ComparePage() {
   const { agents } = useAgentStore();
   const { getActualKey } = useApiKeyStore();
+  const { t } = useI18nStore();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [prompt, setPrompt] = useState('');
   const [results, setResults] = useState<CompareResult[]>([]);
@@ -39,11 +41,11 @@ export default function ComparePage() {
 
   const handleCompare = async () => {
     if (selectedIds.length < 2) {
-      toast.error('اختر وكيلين على الأقل');
+      toast.error(t('compare.noAgents'));
       return;
     }
     if (!prompt.trim()) {
-      toast.error('اكتب السؤال أولاً');
+      toast.error(t('compare.writeFirst'));
       return;
     }
 
@@ -62,7 +64,7 @@ export default function ComparePage() {
           agentId: id,
           agentName: agent.name,
           provider: providerInfo?.name || '',
-          response: '⚠️ لا يوجد مفتاح API لهذا الوكيل. عدّل الوكيل وحدد مفتاحاً.',
+          response: `⚠️ ${t('form.noKeys')}`,
           duration: 0,
           tokens: 0,
           error: 'no-key',
@@ -91,7 +93,7 @@ export default function ComparePage() {
           agentId: id,
           agentName: agent.name,
           provider: providerInfo?.name || '',
-          response: `❌ خطأ: ${err instanceof Error ? err.message : 'غير معروف'}`,
+          response: `❌ Error: ${err instanceof Error ? err.message : 'Unknown'}`,
           duration: (performance.now() - startTime) / 1000,
           tokens: 0,
           error: 'api-error',
@@ -106,11 +108,11 @@ export default function ComparePage() {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl pt-14 md:pt-6 lg:pt-8">
-      <PageHeader title="مقارنة الوكلاء" description="أرسل نفس السؤال لعدة وكلاء وقارن النتائج" />
+      <PageHeader title={t('compare.title')} description={t('compare.subtitle')} />
 
       {/* Agent Selection */}
       <div className="glass-card p-5 mb-6">
-        <p className="text-sm font-semibold text-foreground mb-3">اختر الوكلاء (2-5)</p>
+        <p className="text-sm font-semibold text-foreground mb-3">{t('compare.selectRange')}</p>
         <div className="flex flex-wrap gap-3">
           {agents.map((agent) => {
             const p = AI_PROVIDERS.find((pr) => pr.id === agent.modelProvider);
@@ -137,13 +139,13 @@ export default function ComparePage() {
         <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="اكتب سؤالك هنا..."
+          placeholder={t('compare.writeQuestion')}
           rows={3}
           className="bg-secondary border-border resize-none mb-3"
         />
         <Button onClick={handleCompare} disabled={isLoading} className="gap-2">
           <Send className="w-4 h-4" />
-          {isLoading ? 'جاري المقارنة...' : 'قارن'}
+          {isLoading ? t('compare.comparing') : t('compare.run')}
         </Button>
       </div>
 
