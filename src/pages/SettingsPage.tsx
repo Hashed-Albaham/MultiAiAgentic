@@ -105,7 +105,7 @@ export default function SettingsPage() {
   const sectionAnim = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl">
+    <div className="p-4 md:p-6 lg:p-8 max-w-4xl pt-14 md:pt-6 lg:pt-8">
       <PageHeader title="الإعدادات" description="إدارة المفاتيح، التوكنات، والتفضيلات" />
 
       <Tabs defaultValue="keys" className="space-y-6">

@@ -11,15 +11,15 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-start justify-between mb-8"
+      className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-6 md:mb-8"
     >
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+      <div className="min-w-0">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground truncate">{title}</h1>
         {description && (
-          <p className="text-muted-foreground mt-1 text-sm">{description}</p>
+          <p className="text-muted-foreground mt-0.5 md:mt-1 text-xs md:text-sm">{description}</p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </motion.div>
   );
 }

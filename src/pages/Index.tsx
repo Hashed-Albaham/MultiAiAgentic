@@ -25,7 +25,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl">
+    <div className="p-4 md:p-6 lg:p-8 max-w-7xl pt-14 md:pt-6 lg:pt-8">
       <PageHeader title="لوحة التحكم" description="نظرة عامة على منصة وكيل بلس" />
 
       {/* Stats */}
@@ -33,17 +33,17 @@ export default function Dashboard() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8"
       >
         {stats.map((s) => (
-          <motion.div key={s.label} variants={item} className="glass-card p-5">
+          <motion.div key={s.label} variants={item} className="glass-card p-3 md:p-5">
             <div className="flex items-center justify-between mb-3">
-              <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center`}>
+              <div className={`w-8 md:w-10 h-8 md:h-10 rounded-xl ${s.bg} flex items-center justify-center`}>
                 <s.icon className={`w-5 h-5 ${s.color}`} />
               </div>
               <TrendingUp className="w-4 h-4 text-muted-foreground" />
             </div>
-            <p className="text-2xl font-bold text-foreground">{s.value}</p>
+            <p className="text-xl md:text-2xl font-bold text-foreground">{s.value}</p>
             <p className="text-sm text-muted-foreground">{s.label}</p>
           </motion.div>
         ))}

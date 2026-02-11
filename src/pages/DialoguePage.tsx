@@ -197,7 +197,7 @@ export default function DialoguePage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="p-4 lg:p-6 border-b border-border">
+      <div className="p-3 md:p-4 lg:p-6 border-b border-border pt-14 md:pt-4 lg:pt-6">
         <PageHeader title="الحوار الآلي" description="اختر وكيلين ودعهما يتحاوران تلقائياً" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
@@ -298,8 +298,8 @@ export default function DialoguePage() {
                     {msg.agentIcon}
                   </div>
                   <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isSystem ? 'bg-chart-3/10 border border-chart-3/20' :
-                      isAgent1 ? 'bg-accent/10 border border-accent/20 rounded-tr-sm' :
-                        'bg-primary/10 border border-primary/20 rounded-tl-sm'
+                    isAgent1 ? 'bg-accent/10 border border-accent/20 rounded-tr-sm' :
+                      'bg-primary/10 border border-primary/20 rounded-tl-sm'
                     }`}>
                     <p className={`text-[10px] font-semibold mb-1 ${isSystem ? 'text-chart-3' : isAgent1 ? 'text-accent' : 'text-primary'
                       }`}>{msg.agentName}</p>

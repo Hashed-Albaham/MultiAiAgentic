@@ -28,7 +28,7 @@ export default function AgentsPage() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl">
+    <div className="p-4 md:p-6 lg:p-8 max-w-7xl pt-14 md:pt-6 lg:pt-8">
       <PageHeader
         title="إدارة الوكلاء"
         description="إنشاء وإدارة الوكلاء الذكية"

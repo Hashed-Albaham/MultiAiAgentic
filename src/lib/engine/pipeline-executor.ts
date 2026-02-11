@@ -147,11 +147,14 @@ async function executeLevel(
         agentId: node.agentId,
         agentName: 'غير موجود',
         input: '',
-        output: '',
+        output: '⚠️ [خطأ: الوكيل غير موجود — تم تخطي هذه العقدة]',
         status: 'failed',
         error: 'الوكيل غير موجود',
         iteration,
       });
+      // لا نوقف التنفيذ — نمرر ملاحظة الخطأ للعقد التالية
+      state.activeNodes.delete(nodeId);
+      onUpdate({ ...state });
       return;
     }
 
@@ -197,11 +200,15 @@ async function executeLevel(
         duration: Date.now() - new Date(state.results.get(resultKey)!.startTime!).getTime(),
       });
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'خطأ غير معروف';
+      // مرونة: نضع ملاحظة الخطأ كمخرج حتى لا يتوقف النظام
       state.results.set(resultKey, {
         ...state.results.get(resultKey)!,
+        output: `⚠️ [خطأ في الوكيل "${agent.name}"]: ${errorMsg}\n— تم تمرير هذه الملاحظة للعقدة التالية تلقائياً.`,
         status: 'failed',
-        error: err instanceof Error ? err.message : 'خطأ غير معروف',
+        error: errorMsg,
         endTime: new Date().toISOString(),
+        duration: Date.now() - new Date(state.results.get(resultKey)!.startTime!).getTime(),
       });
     }
 
@@ -280,7 +287,8 @@ export async function executePipeline(
           const key = lastIter != null ? `${nid}__iter${lastIter}` : nid;
           const r = state.results.get(key);
           if (!r?.output) return '';
-          return `[${r.agentName}]: ${r.output}`;
+          const prefix = r.status === 'failed' ? `[⚠️ ${r.agentName} — فشل]` : `[${r.agentName}]`;
+          return `${prefix}: ${r.output}`;
         })
         .filter(Boolean);
       state.finalOutput = finalParts.join('\n\n---\n\n');

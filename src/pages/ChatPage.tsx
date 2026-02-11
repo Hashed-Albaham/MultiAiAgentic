@@ -103,10 +103,10 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="p-4 lg:p-6 border-b border-border">
-        <div className="flex items-center gap-4 max-w-4xl">
+      <div className="p-3 md:p-4 lg:p-6 border-b border-border pr-14 md:pr-4">
+        <div className="flex items-center gap-2 md:gap-4 max-w-4xl flex-wrap">
           <Select value={selectedAgentId} onValueChange={(v) => { setSelectedAgentId(v); setMessages([]); }}>
-            <SelectTrigger className="w-64 bg-card border-border">
+            <SelectTrigger className="w-44 md:w-64 bg-card border-border text-xs md:text-sm h-8 md:h-9">
               <SelectValue placeholder="اختر وكيلاً" />
             </SelectTrigger>
             <SelectContent>
@@ -121,8 +121,8 @@ export default function ChatPage() {
             </SelectContent>
           </Select>
           {agent && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{provider?.name} · {agent.modelId}</span>
+            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+              <span className="hidden sm:inline">{provider?.name} · {agent.modelId}</span>
               {!hasKey && (
                 <span className="flex items-center gap-1 text-[10px] text-chart-4 bg-chart-4/10 px-2 py-0.5 rounded-full">
                   <AlertTriangle className="w-2.5 h-2.5" /> بدون مفتاح
@@ -134,7 +134,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 p-4 lg:p-6">
+      <ScrollArea ref={scrollRef} className="flex-1 p-3 md:p-4 lg:p-6">
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-20">
@@ -169,9 +169,9 @@ export default function ChatPage() {
                     <Bot className="w-4 h-4 text-primary" />
                   )}
                 </div>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${msg.role === 'user'
-                    ? 'bg-accent/15 text-foreground rounded-tr-sm'
-                    : 'bg-card border border-border text-foreground rounded-tl-sm'
+                <div className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm ${msg.role === 'user'
+                  ? 'bg-accent/15 text-foreground rounded-tr-sm'
+                  : 'bg-card border border-border text-foreground rounded-tl-sm'
                   }`}>
                   <div className="prose prose-invert prose-sm max-w-none [&>p]:m-0 [&>blockquote]:border-primary/30">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -199,7 +199,7 @@ export default function ChatPage() {
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 lg:p-6 border-t border-border">
+      <div className="p-3 md:p-4 lg:p-6 border-t border-border">
         <div className="max-w-3xl mx-auto flex gap-2">
           <Textarea
             value={input}

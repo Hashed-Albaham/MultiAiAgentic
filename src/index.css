@@ -137,6 +137,46 @@
   transform: scale(1.4);
 }
 
+/* ReactFlow Controls — dark theme + compact */
+.react-flow__controls {
+  background: hsl(0 0% 5%) !important;
+  border: 1px solid hsl(0 0% 14%) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  overflow: hidden;
+}
+
+.react-flow__controls button {
+  background: hsl(0 0% 5%) !important;
+  border: none !important;
+  border-bottom: 1px solid hsl(0 0% 12%) !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 5px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.react-flow__controls button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls button:hover {
+  background: hsl(0 0% 14%) !important;
+}
+
+.react-flow__controls button svg {
+  fill: hsl(0 0% 75%) !important;
+  width: 14px;
+  height: 14px;
+}
+
+.react-flow__controls button:hover svg {
+  fill: hsl(0 0% 95%) !important;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
