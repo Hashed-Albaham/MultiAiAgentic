@@ -49,7 +49,7 @@ export function AppSidebar() {
         </div>
         {!collapsed && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-hidden min-w-0">
-            <h1 className="text-base md:text-lg font-bold text-foreground whitespace-nowrap">وكيل بلس</h1>
+            <h1 className="text-base md:text-lg font-bold text-foreground whitespace-nowrap">{t('app.brandName')}</h1>
             <p className="text-[10px] text-muted-foreground -mt-0.5">AI Orchestration</p>
           </motion.div>
         )}
@@ -106,7 +106,7 @@ export function AppSidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         className="md:hidden fixed top-3 right-3 z-50 w-10 h-10 rounded-xl bg-sidebar border border-sidebar-border flex items-center justify-center shadow-lg hover:bg-sidebar-accent transition-colors"
-        aria-label="فتح القائمة"
+        aria-label={t('app.openMenu')}
       >
         <Menu className="w-5 h-5 text-foreground" />
       </button>

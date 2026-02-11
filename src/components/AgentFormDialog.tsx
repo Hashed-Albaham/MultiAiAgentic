@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { useAgentStore } from '@/store/agentStore';
 import { useApiKeyStore } from '@/store/apiKeyStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { AI_PROVIDERS, AI_MODELS, type Agent } from '@/types';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
@@ -20,11 +21,11 @@ import { Slider } from '@/components/ui/slider';
 import { Key, AlertTriangle } from 'lucide-react';
 
 const schema = z.object({
-  name: z.string().min(1, 'اسم الوكيل مطلوب'),
+  name: z.string().min(1, 'required'),
   description: z.string().optional(),
-  systemPrompt: z.string().min(1, 'System Prompt مطلوب'),
-  modelProvider: z.string().min(1, 'اختر المزود'),
-  modelId: z.string().min(1, 'اختر النموذج'),
+  systemPrompt: z.string().min(1, 'required'),
+  modelProvider: z.string().min(1, 'required'),
+  modelId: z.string().min(1, 'required'),
   temperature: z.number().min(0).max(2),
   maxTokens: z.number().min(100).max(128000),
 });
@@ -40,6 +41,7 @@ interface Props {
 export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
   const { addAgent, updateAgent } = useAgentStore();
   const { apiKeys, getKeysByProvider } = useApiKeyStore();
+  const { t } = useI18nStore();
   const [selectedKeyId, setSelectedKeyId] = useState<string>('');
 
   const form = useForm<FormData>({
@@ -85,7 +87,6 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
     }
   }, [editAgent, open]);
 
-  // عند تغيير المزود، اختر أول مفتاح متوفر أو اترك فارغاً
   useEffect(() => {
     const keys = getKeysByProvider(watchProvider);
     if (keys.length > 0 && !keys.find((k) => k.id === selectedKeyId)) {
@@ -107,10 +108,10 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
     };
     if (editAgent) {
       updateAgent(editAgent.id, payload);
-      toast.success('تم تحديث الوكيل');
+      toast.success(t('form.agentUpdated'));
     } else {
       addAgent(payload);
-      toast.success('تم إنشاء الوكيل');
+      toast.success(t('form.agentCreated'));
     }
     onOpenChange(false);
   };
@@ -119,23 +120,23 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg bg-card border-border">
         <DialogHeader>
-          <DialogTitle>{editAgent ? 'تعديل الوكيل' : 'وكيل جديد'}</DialogTitle>
+          <DialogTitle>{editAgent ? t('form.editAgent') : t('form.newAgent')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label>الاسم</Label>
-            <Input {...form.register('name')} placeholder="اسم الوكيل" className="bg-secondary border-border mt-1" />
-            {form.formState.errors.name && <p className="text-destructive text-xs mt-1">{form.formState.errors.name.message}</p>}
+            <Label>{t('form.name')}</Label>
+            <Input {...form.register('name')} placeholder={t('form.namePlaceholder')} className="bg-secondary border-border mt-1" />
+            {form.formState.errors.name && <p className="text-destructive text-xs mt-1">{t('form.nameRequired')}</p>}
           </div>
 
           <div>
-            <Label>الوصف</Label>
-            <Input {...form.register('description')} placeholder="وصف مختصر" className="bg-secondary border-border mt-1" />
+            <Label>{t('form.description')}</Label>
+            <Input {...form.register('description')} placeholder={t('form.descPlaceholder')} className="bg-secondary border-border mt-1" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>المزود</Label>
+              <Label>{t('form.provider')}</Label>
               <Select value={watchProvider} onValueChange={(v) => { form.setValue('modelProvider', v); form.setValue('modelId', AI_MODELS[v]?.[0]?.id || ''); }}>
                 <SelectTrigger className="bg-secondary border-border mt-1">
                   <SelectValue />
@@ -148,7 +149,7 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
               </Select>
             </div>
             <div>
-              <Label>النموذج</Label>
+              <Label>{t('form.model')}</Label>
               <Select value={form.watch('modelId')} onValueChange={(v) => form.setValue('modelId', v)}>
                 <SelectTrigger className="bg-secondary border-border mt-1">
                   <SelectValue />
@@ -162,15 +163,14 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
             </div>
           </div>
 
-          {/* اختيار مفتاح API */}
           <div>
             <Label className="flex items-center gap-1.5">
-              <Key className="w-3.5 h-3.5" /> مفتاح API
+              <Key className="w-3.5 h-3.5" /> {t('form.apiKey')}
             </Label>
             {providerKeys.length > 0 ? (
               <Select value={selectedKeyId} onValueChange={setSelectedKeyId}>
                 <SelectTrigger className="bg-secondary border-border mt-1">
-                  <SelectValue placeholder="اختر مفتاحاً..." />
+                  <SelectValue placeholder={t('form.selectKey')} />
                 </SelectTrigger>
                 <SelectContent>
                   {providerKeys.map((k) => (
@@ -184,15 +184,15 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
               <div className="mt-1 p-2.5 rounded-lg bg-chart-4/10 border border-chart-4/20 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-chart-4 shrink-0" />
                 <p className="text-xs text-chart-4">
-                  لا توجد مفاتيح لـ {AI_PROVIDERS.find((p) => p.id === watchProvider)?.name}. اذهب للإعدادات لإضافة مفتاح.
+                  {t('form.noKeys')}
                 </p>
               </div>
             )}
           </div>
 
           <div>
-            <Label>System Prompt</Label>
-            <Textarea {...form.register('systemPrompt')} placeholder="تعليمات النظام للوكيل..." rows={4} className="bg-secondary border-border mt-1 resize-none" />
+            <Label>{t('form.systemPrompt')}</Label>
+            <Textarea {...form.register('systemPrompt')} placeholder={t('form.promptPlaceholder')} rows={4} className="bg-secondary border-border mt-1 resize-none" />
           </div>
 
           <div>
@@ -208,8 +208,8 @@ export function AgentFormDialog({ open, onOpenChange, editAgent }: Props) {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>إلغاء</Button>
-            <Button type="submit">{editAgent ? 'تحديث' : 'إنشاء'}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t('app.cancel')}</Button>
+            <Button type="submit">{editAgent ? t('app.update') : t('app.create')}</Button>
           </div>
         </form>
       </DialogContent>

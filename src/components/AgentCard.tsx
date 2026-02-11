@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Bot, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAgentStore } from '@/store/agentStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { AI_PROVIDERS } from '@/types';
 import type { Agent } from '@/types';
 import { Link } from 'react-router-dom';
@@ -14,11 +15,12 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, onEdit }: AgentCardProps) {
   const { deleteAgent } = useAgentStore();
+  const { t } = useI18nStore();
   const provider = AI_PROVIDERS.find((p) => p.id === agent.modelProvider);
 
   const handleDelete = () => {
     deleteAgent(agent.id);
-    toast.success('تم حذف الوكيل بنجاح');
+    toast.success(t('agents.deleteConfirm'));
   };
 
   return (
@@ -46,7 +48,7 @@ export function AgentCard({ agent, onEdit }: AgentCardProps) {
         <Link to={`/chat?agent=${agent.id}`} className="flex-1">
           <Button variant="ghost" size="sm" className="w-full gap-2 text-primary hover:text-primary hover:bg-primary/10">
             <MessageSquare className="w-3.5 h-3.5" />
-            محادثة
+            {t('agents.chat')}
           </Button>
         </Link>
         <Button variant="ghost" size="sm" onClick={() => onEdit(agent)} className="gap-1 text-muted-foreground hover:text-foreground">
